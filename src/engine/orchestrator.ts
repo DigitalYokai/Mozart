@@ -1,6 +1,6 @@
 import type { Task } from "../domain/task.js";
 import type { Worker, WorkerResult } from "../domain/worker.js";
-import { TaskStateMachine } from "../domain/state.js";
+import { TaskStateMachine, WorkflowStateMachine } from "../domain/state.js";
 import { Workflow } from "../domain/workflow.js";
 import { Scheduler } from "./scheduler.js";
 import { WorkflowValidator } from "./validator.js";
@@ -71,7 +71,8 @@ export class Orchestrator {
 
     this.validator.validate(workflow);
 
-    workflow.status = "running";
+    WorkflowStateMachine.transition(workflow, "running");
+
 
     try {
       while (
@@ -87,15 +88,15 @@ export class Orchestrator {
           const result = await this.execute(task);
 
           if (!result.success) {
-            workflow.status = "failed";
+            WorkflowStateMachine.transition(workflow, "failed")
             return;
           }
         }
       }
 
-      workflow.status = "completed";
+      WorkflowStateMachine.transition(workflow, "completed")
     } catch (error) {
-      workflow.status = "failed";
+      WorkflowStateMachine.transition(workflow, "failed")
       throw error;
     }
   }
