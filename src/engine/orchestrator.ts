@@ -2,9 +2,13 @@ import type { Task } from "../domain/task.js";
 import type { Worker, WorkerResult } from "../domain/worker.js";
 import { TaskStateMachine } from "../domain/state.js";
 import { Workflow } from "../domain/workflow.js";
+import { Scheduler } from "./scheduler.js";
 
 export class Orchestrator {
-  constructor(private readonly worker: Worker) { }
+  constructor(
+    private readonly worker: Worker,
+    private readonly scheduler = new Scheduler()
+  ) { }
 
   async execute(task: Task): Promise<WorkerResult> {
     if (task.status !== "pending") {
@@ -57,28 +61,39 @@ export class Orchestrator {
     return result;
   }
 
+  //MARK: EXECUTE WORKFLOW
   async executeWorkflow(workflow: Workflow): Promise<void> {
     if (workflow.status !== "pending") {
       throw new Error("Workflow is not pending");
     }
+
     workflow.status = "running";
 
-    console.log(`[Mozart] Objective: ${workflow.objective}`);
+    try {
+      while (
+        !workflow.tasks.every(t => t.status === "completed")
+      ) {
+        const ready = this.scheduler.getReadyTasks(workflow);
 
-    for (const task of workflow.tasks) {
-      const result = await this.execute(task);
+        if (ready.length === 0) {
+          throw new Error("No executable tasks remaining");
+        }
 
-      if (!result.success) {
-        workflow.status = "failed";
-        console.log(`[Mozart] Workflow failed at task ${task.id}`);
+        for (const task of ready) {
+          const result = await this.execute(task);
 
-        return;
+          if (!result.success) {
+            workflow.status = "failed";
+            return;
+          }
+        }
       }
+
+      workflow.status = "completed";
+    } catch (error) {
+      workflow.status = "failed";
+      throw error;
     }
-
-    workflow.status = "completed";
-
-    console.log("[Mozart] Workflow completed");
   }
 }
 

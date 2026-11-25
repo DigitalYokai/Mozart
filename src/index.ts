@@ -38,7 +38,7 @@ const workflow: Workflow = {
     },
   ],
 };
-
+workflow.tasks.reverse();
 await mozart.executeWorkflow(workflow);
 
 console.log(workflow);
