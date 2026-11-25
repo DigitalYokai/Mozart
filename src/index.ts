@@ -1,45 +1,23 @@
+import { CodexWorker } from "./workers/codex.js";
 import { Orchestrator } from "./engine/orchestrator.js";
-import { MockWorker } from "./workers/mock.js";
-import type { Workflow } from "./domain/workflow.js";
+import type { Task } from "./domain/task.js";
 
-const mozart = new Orchestrator(new MockWorker());
+const worker = new CodexWorker(
+  "/tmp/mozart-playground"
+);
 
-const workflow: Workflow = {
-  id: "workflow-001",
-  objective: "Implement authentication",
+const mozart = new Orchestrator(worker);
+
+const task: Task = {
+  id: "001",
+  objective: "Create a hello world program in Go.",
   status: "pending",
-  tasks: [
-    {
-      id: "001",
-      objective: "Create database schema",
-      status: "pending",
-      dependencies: [],
-      acceptanceCriteria: ["Schema exists"],
-      attempts: 0,
-      maxAttempts: 3,
-    },
-    {
-      id: "002",
-      objective: "Implement authentication API",
-      status: "pending",
-      dependencies: ["001"],
-      acceptanceCriteria: ["Login endpoint works"],
-      attempts: 0,
-      maxAttempts: 3,
-    },
-    {
-      id: "003",
-      objective: "Write authentication tests",
-      status: "pending",
-      dependencies: ["002"],
-      acceptanceCriteria: ["All tests pass"],
-      attempts: 0,
-      maxAttempts: 3,
-    },
-  ],
+  dependencies: [],
+  acceptanceCriteria: ["A main.go file exists"],
+  attempts: 0,
+  maxAttempts: 1,
 };
 
+const result = await mozart.execute(task);
 
-await mozart.executeWorkflow(workflow);
-await mozart.executeWorkflow(workflow);
-console.log(workflow);
+console.log(result);
