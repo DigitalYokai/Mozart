@@ -3,11 +3,13 @@ import type { Worker, WorkerResult } from "../domain/worker.js";
 import { TaskStateMachine } from "../domain/state.js";
 import { Workflow } from "../domain/workflow.js";
 import { Scheduler } from "./scheduler.js";
+import { WorkflowValidator } from "./validator.js";
 
 export class Orchestrator {
   constructor(
     private readonly worker: Worker,
-    private readonly scheduler = new Scheduler()
+    private readonly scheduler = new Scheduler(),
+    private readonly validator = new WorkflowValidator()
   ) { }
 
   async execute(task: Task): Promise<WorkerResult> {
@@ -66,6 +68,8 @@ export class Orchestrator {
     if (workflow.status !== "pending") {
       throw new Error("Workflow is not pending");
     }
+
+    this.validator.validate(workflow);
 
     workflow.status = "running";
 

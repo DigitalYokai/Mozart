@@ -38,7 +38,7 @@ const workflow: Workflow = {
     },
   ],
 };
-workflow.tasks.reverse();
+workflow.tasks[0].dependencies.push("999");
 await mozart.executeWorkflow(workflow);
 
 console.log(workflow);
