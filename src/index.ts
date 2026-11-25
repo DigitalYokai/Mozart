@@ -13,7 +13,7 @@ const workflow: Workflow = {
       id: "001",
       objective: "Create database schema",
       status: "pending",
-      dependencies: [],
+      dependencies: ["003"],
       acceptanceCriteria: ["Schema exists"],
       attempts: 0,
       maxAttempts: 3,
@@ -38,7 +38,8 @@ const workflow: Workflow = {
     },
   ],
 };
-workflow.tasks[0].dependencies.push("999");
+
+
 await mozart.executeWorkflow(workflow);
 
 console.log(workflow);
