@@ -1,24 +1,44 @@
 import { Orchestrator } from "./engine/orchestrator.js";
 import { MockWorker } from "./workers/mock.js";
-import type { Task } from "./domain/task.js";
+import type { Workflow } from "./domain/workflow.js";
 
-const worker = new MockWorker();
-const mozart = new Orchestrator(worker);
+const mozart = new Orchestrator(new MockWorker());
 
-const task: Task = {
-  id: "001",
+const workflow: Workflow = {
+  id: "workflow-001",
   objective: "Implement authentication",
   status: "pending",
-  dependencies: [],
-  acceptanceCriteria: [
-    "Authentication middleware exists",
-    "Tests pass",
+  tasks: [
+    {
+      id: "001",
+      objective: "Create database schema",
+      status: "pending",
+      dependencies: [],
+      acceptanceCriteria: ["Schema exists"],
+      attempts: 0,
+      maxAttempts: 3,
+    },
+    {
+      id: "002",
+      objective: "Implement authentication API",
+      status: "pending",
+      dependencies: ["001"],
+      acceptanceCriteria: ["Login endpoint works"],
+      attempts: 0,
+      maxAttempts: 3,
+    },
+    {
+      id: "003",
+      objective: "Write authentication tests",
+      status: "pending",
+      dependencies: ["002"],
+      acceptanceCriteria: ["All tests pass"],
+      attempts: 0,
+      maxAttempts: 3,
+    },
   ],
-  attempts: 0,
-  maxAttempts: 3,
 };
 
-var result = await mozart.execute(task);
-result = await mozart.execute(task);
-console.log(result);
-console.log(task);
+await mozart.executeWorkflow(workflow);
+
+console.log(workflow);
