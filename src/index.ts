@@ -18,7 +18,7 @@ const task: Task = {
   maxAttempts: 3,
 };
 
-const result = await mozart.execute(task);
-
+var result = await mozart.execute(task);
+result = await mozart.execute(task);
 console.log(result);
 console.log(task);
