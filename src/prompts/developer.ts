@@ -1,6 +1,7 @@
+import { ExecutionContext } from "../domain/execution-context.js";
 import type { Task } from "../domain/task.js";
 
-export function buildDeveloperPrompt(task: Task): string {
+export function buildDeveloperPrompt(task: Task, context?: ExecutionContext): string {
   return `
 You are a software engineering worker managed by Mozart.
 
@@ -17,6 +18,16 @@ ${task.acceptanceCriteria.map(
 
 ATTEMPT:
 ${task.attempts} of ${task.maxAttempts}
+
+${context?.previousFailure
+      ? `
+PREVIOUS ATTEMPT FAILURE:
+${context.previousFailure}
+
+Inspect the previous attempt and address the reported failure.
+Preserve any correct implementation already present.
+`
+      : ""}
 
 INSTRUCTIONS:
 - Inspect the existing repository before making changes.

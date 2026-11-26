@@ -6,6 +6,7 @@ import { developerOutputSchema, developerSchema } from "../schemas/developer.js"
 import { DeveloperResult } from "../domain/developer-result.js";
 import { handleCodexEvent } from "../events/codex.js";
 import { TokenUsage } from "../domain/metrics.js";
+import { ExecutionContext } from "../domain/execution-context.js";
 
 export class CodexWorker implements Worker<DeveloperResult> {
   private readonly codex = new Codex();
@@ -15,7 +16,7 @@ export class CodexWorker implements Worker<DeveloperResult> {
     private readonly workingDirectory: string
   ) { }
 
-  async execute(task: Task): Promise<WorkerResult<DeveloperResult>> {
+  async execute(task: Task, context?: ExecutionContext): Promise<WorkerResult<DeveloperResult>> {
 
     const startedAt = performance.now(); // Start of elapsed time
 
@@ -26,7 +27,7 @@ export class CodexWorker implements Worker<DeveloperResult> {
     };
 
     const thread = this.getOrCreateThread(task.id);
-    const prompt = buildDeveloperPrompt(task)
+    const prompt = buildDeveloperPrompt(task, context)
 
     try {
       const { events } = await thread.runStreamed(prompt, {

@@ -7,6 +7,7 @@ import { WorkflowValidator } from "./validator.js";
 import { MetricsCollector } from "./metrics.js";
 import { WorkflowMetrics } from "../domain/metrics.js";
 import { WorkflowResult } from "../domain/workflow-result.js";
+import { ExecutionContext } from "../domain/execution-context.js";
 
 export class Orchestrator {
   constructor(
@@ -26,6 +27,8 @@ export class Orchestrator {
       output: "No attempts remaining",
     };
 
+
+    const context: ExecutionContext = {};
     while (task.attempts < task.maxAttempts) {
       TaskStateMachine.transition(task, "running");
 
@@ -36,7 +39,7 @@ export class Orchestrator {
       );
 
       try {
-        result = await this.worker.execute(task);
+        result = await this.worker.execute(task, context);
       } catch (error) {
         result = {
           success: false,
@@ -57,7 +60,7 @@ export class Orchestrator {
       }
 
       TaskStateMachine.transition(task, "failed");
-
+      context.previousFailure = result.output; //saves reason why task failed
       console.log(`[Mozart] Failed: ${result.output}`);
 
       if (task.attempts < task.maxAttempts) {
