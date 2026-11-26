@@ -5,7 +5,7 @@ export interface WorkerResult<T = unknown> {
   success: boolean;
   output: string;
   data?: T;
-  metrics: ExecutionMetrics
+  metrics?: ExecutionMetrics
 }
 
 export interface Worker<T = unknown> {

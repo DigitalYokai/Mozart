@@ -34,4 +34,16 @@ export class MetricsCollector {
   getSummary(): WorkflowMetrics {
     return structuredClone(this.metrics);
   }
+
+  reset(): void {
+    this.metrics = {
+      totalAttempts: 0,
+      totalDurationMs: 0,
+      usage: {
+        inputTokens: 0,
+        cachedInputTokens: 0,
+        outputTokens: 0,
+      },
+    };
+  }
 }

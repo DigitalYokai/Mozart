@@ -6,6 +6,7 @@ import { Scheduler } from "./scheduler.js";
 import { WorkflowValidator } from "./validator.js";
 import { MetricsCollector } from "./metrics.js";
 import { WorkflowMetrics } from "../domain/metrics.js";
+import { WorkflowResult } from "../domain/workflow-result.js";
 
 export class Orchestrator {
   constructor(
@@ -69,12 +70,13 @@ export class Orchestrator {
   }
 
   //MARK: EXECUTE WORKFLOW
-  async executeWorkflow(workflow: Workflow): Promise<void> {
+  async executeWorkflow(workflow: Workflow): Promise<WorkflowResult> {
     if (workflow.status !== "pending") {
       throw new Error("Workflow is not pending");
     }
 
     this.validator.validate(workflow);
+    this.metrics.reset();
 
     WorkflowStateMachine.transition(workflow, "running");
 
@@ -94,12 +96,14 @@ export class Orchestrator {
 
           if (!result.success) {
             WorkflowStateMachine.transition(workflow, "failed")
-            return;
+            return this.buildReport(workflow);
           }
         }
       }
 
       WorkflowStateMachine.transition(workflow, "completed")
+      return this.buildReport(workflow);
+
     } catch (error) {
       WorkflowStateMachine.transition(workflow, "failed")
       throw error;
@@ -108,6 +112,32 @@ export class Orchestrator {
 
   getMetrics(): WorkflowMetrics {
     return this.metrics.getSummary();
+  }
+
+  private buildReport(workflow: Workflow): WorkflowResult {
+    return {
+      workflowId: workflow.id,
+      status: workflow.status,
+      totalTasks: workflow.tasks.length,
+
+      completedTasks: workflow.tasks.filter(
+        task => task.status === "completed"
+      ).length,
+
+      failedTasks: workflow.tasks.filter(
+        task => task.status === "failed"
+      ).length,
+
+      pendingTasks: workflow.tasks.filter(
+        task => task.status === "pending"
+      ).length,
+
+      blockedTasks: workflow.tasks.filter(
+        task => task.status === "blocked"
+      ).length,
+
+      metrics: this.metrics.getSummary(),
+    };
   }
 }
 
