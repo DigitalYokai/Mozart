@@ -1,21 +1,24 @@
+import { Mozart } from "./mozart.js";
 import { CodexPlanner } from "./planners/codex.js";
-import { WorkflowFactory } from "./engine/workflow-factory.js";
+import { CodexWorker } from "./workers/codex.js";
+import { Orchestrator } from "./engine/orchestrator.js";
 
-const planner = new CodexPlanner(
-  "/tmp/mozart-playground"
-);
+const workingDirectory = "/tmp/mozart-playground";
 
-const factory = new WorkflowFactory();
+const planner = new CodexPlanner(workingDirectory);
+const worker = new CodexWorker(workingDirectory);
 
-const result = await planner.plan({
-  objective: "Build a REST API for managing tasks in Go.",
+const orchestrator = new Orchestrator(worker);
+
+const mozart = new Mozart(planner, orchestrator);
+
+const result = await mozart.run({
+  objective: "Build a simple HTTP server in Go.",
   constraints: [
-    "Use the Go standard library.",
-    "Use in-memory storage.",
+    "Use only the standard library.",
+    "Expose a GET /health endpoint.",
     "Include automated tests.",
   ],
 });
 
-const workflow = factory.create(result.plan, 3);
-
-console.log(JSON.stringify(workflow, null, 2)); 
+console.log(JSON.stringify(result, null, 2));
