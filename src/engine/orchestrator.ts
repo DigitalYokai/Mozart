@@ -4,12 +4,15 @@ import { TaskStateMachine, WorkflowStateMachine } from "../domain/state.js";
 import { Workflow } from "../domain/workflow.js";
 import { Scheduler } from "./scheduler.js";
 import { WorkflowValidator } from "./validator.js";
+import { MetricsCollector } from "./metrics.js";
+import { WorkflowMetrics } from "../domain/metrics.js";
 
 export class Orchestrator {
   constructor(
     private readonly worker: Worker,
     private readonly scheduler = new Scheduler(),
-    private readonly validator = new WorkflowValidator()
+    private readonly validator = new WorkflowValidator(),
+    private readonly metrics = new MetricsCollector(),
   ) { }
 
   async execute(task: Task): Promise<WorkerResult> {
@@ -38,7 +41,9 @@ export class Orchestrator {
           success: false,
           output: String(error),
         };
+
       }
+      this.metrics.record(result.metrics)
 
       if (result.success) {
         TaskStateMachine.transition(task, "reviewing");
@@ -99,6 +104,10 @@ export class Orchestrator {
       WorkflowStateMachine.transition(workflow, "failed")
       throw error;
     }
+  }
+
+  getMetrics(): WorkflowMetrics {
+    return this.metrics.getSummary();
   }
 }
 
