@@ -51,6 +51,7 @@ export class Orchestrator {
 
         // Temporary review implementation
         TaskStateMachine.transition(task, "completed");
+        this.worker.release?.(task.id);
 
         return result;
       }
@@ -65,6 +66,7 @@ export class Orchestrator {
         console.log("[Mozart] Retrying...");
       }
     }
+    this.worker.release?.(task.id);
 
     return result;
   }

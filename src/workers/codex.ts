@@ -1,4 +1,4 @@
-import { Codex } from "@openai/codex-sdk";
+import { Codex, type Thread } from "@openai/codex-sdk";
 import type { Worker, WorkerResult } from "../domain/worker.js";
 import type { Task } from "../domain/task.js";
 import { buildDeveloperPrompt } from "../prompts/developer.js";
@@ -9,6 +9,7 @@ import { TokenUsage } from "../domain/metrics.js";
 
 export class CodexWorker implements Worker<DeveloperResult> {
   private readonly codex = new Codex();
+  private readonly threads = new Map<string, Thread>();
 
   constructor(
     private readonly workingDirectory: string
@@ -24,12 +25,7 @@ export class CodexWorker implements Worker<DeveloperResult> {
       outputTokens: 0,
     };
 
-    const thread = this.codex.startThread({
-      workingDirectory: this.workingDirectory,
-      sandboxMode: "workspace-write",
-      approvalPolicy: "never",
-    });
-
+    const thread = this.getOrCreateThread(task.id);
     const prompt = buildDeveloperPrompt(task)
 
     try {
@@ -92,5 +88,27 @@ export class CodexWorker implements Worker<DeveloperResult> {
         }
       };
     }
+  }
+
+  private getOrCreateThread(taskId: string): Thread {
+    const existing = this.threads.get(taskId)
+
+    if (existing) {
+      return existing;
+    }
+
+    const thread = this.codex.startThread({
+      workingDirectory: this.workingDirectory,
+      sandboxMode: "workspace-write",
+      approvalPolicy: "never",
+    });
+
+    this.threads.set(taskId, thread);
+
+    return thread;
+  }
+
+  release(taskId: string): void {
+    this.threads.delete(taskId);
   }
 }

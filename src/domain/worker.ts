@@ -10,4 +10,5 @@ export interface WorkerResult<T = unknown> {
 
 export interface Worker<T = unknown> {
   execute(task: Task): Promise<WorkerResult>;
+  release?(taskId: string): void;
 }
