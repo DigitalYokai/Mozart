@@ -1,23 +1,21 @@
-import { CodexWorker } from "./workers/codex.js";
-import { Orchestrator } from "./engine/orchestrator.js";
-import type { Task } from "./domain/task.js";
+import { CodexPlanner } from "./planners/codex.js";
+import { WorkflowFactory } from "./engine/workflow-factory.js";
 
-const worker = new CodexWorker(
+const planner = new CodexPlanner(
   "/tmp/mozart-playground"
 );
 
-const mozart = new Orchestrator(worker);
+const factory = new WorkflowFactory();
 
-const task: Task = {
-  id: "001",
-  objective: "Create a hello world program in Go.",
-  status: "pending",
-  dependencies: [],
-  acceptanceCriteria: ["A main.go file exists"],
-  attempts: 0,
-  maxAttempts: 1,
-};
+const result = await planner.plan({
+  objective: "Build a REST API for managing tasks in Go.",
+  constraints: [
+    "Use the Go standard library.",
+    "Use in-memory storage.",
+    "Include automated tests.",
+  ],
+});
 
-const result = await mozart.execute(task);
+const workflow = factory.create(result.plan, 3);
 
-console.log(result);
+console.log(JSON.stringify(workflow, null, 2)); 

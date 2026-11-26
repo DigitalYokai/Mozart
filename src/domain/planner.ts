@@ -12,5 +12,5 @@ export interface PlanningResult {
 }
 
 export interface Planner {
-  plan(request: PlanningRequest): Promise<PlanningRequest>;
+  plan(request: PlanningRequest): Promise<PlanningResult>;
 }
