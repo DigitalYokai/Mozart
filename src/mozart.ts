@@ -7,11 +7,13 @@ import type { MozartResult } from "./domain/mozart-result.js";
 
 import { Orchestrator } from "./engine/orchestrator.js";
 import { WorkflowFactory } from "./engine/workflow-factory.js";
+import { ApprovalProvider } from "./domain/approval.js";
 
 export class Mozart {
   constructor(
     private readonly planner: Planner,
     private readonly orchestrator: Orchestrator,
+    private readonly approval: ApprovalProvider,
     private readonly factory = new WorkflowFactory(),
   ) { }
 
@@ -27,7 +29,15 @@ export class Mozart {
       planning.plan,
       maxAttempts,
     );
+    const decision = await this.approval.approve(workflow);
 
+    if (!decision.approved) {
+      return {
+        status: "rejected",
+        planning,
+        reason: decision.reason ?? "Workflow rejected",
+      };
+    }
     console.log("[Mozart] Workflow created");
     console.log(`[Mozart] Tasks: ${workflow.tasks.length}`);
 
@@ -35,6 +45,7 @@ export class Mozart {
       await this.orchestrator.executeWorkflow(workflow);
 
     return {
+      status: "executed",
       planning,
       execution,
     };

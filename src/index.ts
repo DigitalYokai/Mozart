@@ -2,15 +2,15 @@ import { Mozart } from "./mozart.js";
 import { CodexPlanner } from "./planners/codex.js";
 import { CodexWorker } from "./workers/codex.js";
 import { Orchestrator } from "./engine/orchestrator.js";
-
+import { ConsoleApproval } from "./approvals/console.js";
 const workingDirectory = "/tmp/mozart-playground";
 
 const planner = new CodexPlanner(workingDirectory);
 const worker = new CodexWorker(workingDirectory);
 
 const orchestrator = new Orchestrator(worker);
-
-const mozart = new Mozart(planner, orchestrator);
+const approval = new ConsoleApproval();
+const mozart = new Mozart(planner, orchestrator, approval);
 
 const result = await mozart.run({
   objective: "Build a simple HTTP server in Go.",
