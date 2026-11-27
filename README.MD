@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="assets/mozart-ascii.png" width="300" alt="Mozart" />
+  <img src="assets/mozart-ascii.png" width="200" alt="Mozart" />
 </p>
 
 <h1 align="center">Mozart</h1>
